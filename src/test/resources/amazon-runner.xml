@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="regression suite">
+    <parameter name="useCloudEnv" value="false"></parameter>
+
+    <!--cloud parameters-->
+    <parameter name="envName" value="browserstack"></parameter>
+    <parameter name="os" value="OS X"></parameter>
+    <parameter name="os_version" value="Big Sur"></parameter>
+    <parameter name="browser_version" value="110"></parameter>
+    <!--local & cloud parameters-->
+    <parameter name="browserName" value="edge"></parameter>
+    <parameter name="url" value="http://www.amazon.com"></parameter>
+
+    <test name="login amazon test">
+        <classes>
+<!--            <class name="amazontest.AmazonSearchTest"></class>-->
+        </classes>
+    </test>
+    <test name="select from the dropdown">
+        <classes>
+            <class name="amazontest.SelectProductTest"></class>
+        </classes>
+    </test>
+    <test name="hover over the language button">
+        <classes>
+            <class name="amazontest.LanguageTest"></class>
+        </classes>
+    </test>
+</suite>

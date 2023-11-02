@@ -1,0 +1,7 @@
+1. create saucedemotest cases for login feature
+2. automate the login feature (use id, name, clasName, tagName, linkText and partialLinkText)
+3. create your own website following the video: https://www.youtube.com/watch?v=PgAZ8KzfhO8
+
+4. create saucedemotest cases for the saucedemmo app (purchase, filter)
+5. automate the purchase and filter test cases
+

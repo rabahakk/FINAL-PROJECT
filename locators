@@ -1,0 +1,45 @@
+locators (selectors): use locator only if it's unique
+
+NB:
+avoid usage of alphanumeric value, it may change every time you refresh the page
+linkText and partialLinkText work for links only (web element with anchor tag)
+use single quote to build your cssSelectors and xpaths (double quote us accepted but confuses with string double quote)
+replace all spaces by . in multiple value class
+class cannot have space
+cssSelector is 10 times faster than xpath
+
+given locator:
+id (best locator if not dynamic - usually dynamic ids take alphanumeric value)
+name
+className
+tagName
+linkText
+partialLinkText
+
+built locator:
+cssSelector
+tagName[attribute='value']
+*[attribute='value']
+#value (value has to be id value)
+.value (value has to be class value - if class has multiple words .value.value2.value3)
+tagName[attribute*='partialValue']
+
+tagName[attribute='value'] tagName tagName tagName tagName transverse from parent to child(the first child)
+tagName[attribute='value'] tagName:nth-child(index) transverse from parent to child(other children)
+
+xpath
+/html/body/tagName[index]/tagName[index]/tagName[index] absolute xpath
+
+//tagName[@attribute='value'] relative xpath
+//*[@attribute='value']
+
+//tagName[@attribute='value']/tagName[index]/tagName[index]/tagName[index] parent to child
+//tagName[@attribute='value']/../../.. child to parent
+//tagName[@attribute='value']/following-sibling:tagName sibling xpath
+//tagName[@attribute='value']/preceding-sibling:tagName sibling xpath
+
+Youtube Channels:
+Rahul Shetty
+Naveen automation labs
+Mukesh Otwani
+Techie (SDET) (Pavan Kumar)
