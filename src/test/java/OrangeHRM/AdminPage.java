@@ -1,5 +1,5 @@
-package pages.OrangeHRM;
-
+package OrangeHRM;
+import base.CommonAPI;
 import base.CommonAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,8 +13,7 @@ import utility.Utility;
 public class AdminPage extends CommonAPI {
     public String UsernameOH = Utility.getProperties().getProperty("UsernameOH");
     Logger LOG = LogManager.getLogger(AdminPage.class.getName());
-
-    public AdminPage(WebDriver driver) {
+    public AdminPage(WebDriver driver){
         PageFactory.initElements(driver, this);
     }
 
@@ -30,9 +29,9 @@ public class AdminPage extends CommonAPI {
     WebElement editBtn;
     @FindBy(css = ".oxd-icon.bi-check.oxd-checkbox-input-icon")
     WebElement passwordCheckBox;
-    @FindBy(xpath = "//span[text()='Job ']")
+    @FindBy(xpath= "//span[text()='Job ']")
     WebElement JobTitleDropDown;
-    @FindBy(xpath = "//a[text()='Job Titles']")
+    @FindBy(xpath="//a[text()='Job Titles']")
     WebElement JobTitle;
     @FindBy(xpath = "//div[@class='orangehrm-header-container']//button[@type='button']")
     WebElement AddBtn;
@@ -55,82 +54,68 @@ public class AdminPage extends CommonAPI {
     @FindBy(css = ".oxd-text.oxd-text--p.oxd-text--toast-message.oxd-toast-content-text")
     WebElement ToastMsgText;
 
-    public void typeUserName() {
+    public void typeUserName(){
         type(userNameTxt, UsernameOH);
         LOG.info("text set to username");
     } // enter username
-
-    public void userRoleDropDown() {
+    public void userRoleDropDown(){
         clickOn(userRoleDropDown);
         userRoleDropDown.sendKeys(Keys.ARROW_DOWN, Keys.ENTER);
         LOG.info("Admin selected from dropdown");
     } // select Admin from UsersRole drop down
-
-    public void statusDropDown() {
+    public void statusDropDown(){
         clickOn(statusDropDown);
         statusDropDown.sendKeys(Keys.ARROW_DOWN, Keys.ESCAPE);
         LOG.info("Enable selected from dropdown");
 
     } // select enable from Status drop down
-
-    public void clickSearch() {
+    public void clickSearch(){
         clickOn(SearchBtn);
         LOG.info("search button clicked");
     } // click search button
-
-    public void clickOnEdit() {
+    public void clickOnEdit(){
         clickOn(editBtn);
         LOG.info("edit button clicked");
     } // click edit button
-
-    public boolean clickOnCheckBox() {
+    public boolean clickOnCheckBox(){
         clickOn(passwordCheckBox);
         boolean flag = passwordCheckBox.isEnabled();
         LOG.info("checkbox clicked, and it is displayed");
         return flag;
     } // check if change Password check box is available
-
-    public void jobTitleFromDropDown() {
+    public void jobTitleFromDropDown(){
         clickOn(JobTitleDropDown);
         clickOn(JobTitle);
         LOG.info("Job Titles is selected from JobDropDown");
     }//handel Job dropdown //select JobTitles
-
-    public void clickOnAddBtn() {
+    public void clickOnAddBtn(){
         clickOn(AddBtn);
         LOG.info("Add button clicked");
     }//click on Add button
-
-    public void typeJobTitle(String JobTitle) {
+    public void typeJobTitle(String JobTitle){
         type(JobTitleTxt, JobTitle);
         LOG.info("JobTitle text typed");
     }//type job title
-
-    public void addJobDescription(String Jobdescription) {
+    public void addJobDescription(String Jobdescription){
         type(JobDescription, Jobdescription);
         LOG.info("Job description text typed");
     }//type job description
-
-    public void typeNote(String Note) {
+    public void typeNote(String Note){
         type(Notetxt, Note);
         LOG.info("Note text typed");
     }//type a note
-
-    public void clickOnSave() {
+    public void clickOnSave(){
         clickOn(SaveBtn);
         LOG.info("Save button clicked");
     }//click on save
-
-    public void deleteTheCreatedJobTitle(String JobTitle) {
+    public void deleteTheCreatedJobTitle(String JobTitle){
         clickOn(DeleteBtn);
         clickOn(YesDeleteBtn);
         LOG.info("Delete button clicked");
     } // delete the created job title
-
-    public String ToastMessage() {
-        String message = getTextFromElement(ToastMsgText);
+    public String ToastMessage(){
+        String message=getTextFromElement(ToastMsgText);
         LOG.info("Toast message captured");
         return message;
-
-    }
+    }// step confirmation with toast message
 }
