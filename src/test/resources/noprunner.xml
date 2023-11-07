@@ -10,22 +10,13 @@
     <parameter name="os_version" value="Big Sur"></parameter>
     <parameter name="browser_version" value="110"></parameter>
     <!--local & cloud parameters-->
+    <parameter name="url" value="https://demo.nopcommerce.com/"></parameter>
     <parameter name="browserName" value="edge"></parameter>
-    <parameter name="url" value="http://www.amazon.com"></parameter>
 
-    <test name="login amazon test">
+    <test name="nop commerce">
         <classes>
-<!--            <class name="amazontest.AmazonSearchTest"></class>-->
-        </classes>
-    </test>
-    <test name="select from the dropdown">
-        <classes>
-            <class name="amazontest.SelectProductTest"></class>
-        </classes>
-    </test>
-    <test name="hover over the language button">
-        <classes>
-            <class name="amazontest.LanguageTest"></class>
+            <class name="nopcommerce.registrationTest"></class>
+
         </classes>
     </test>
 </suite>
