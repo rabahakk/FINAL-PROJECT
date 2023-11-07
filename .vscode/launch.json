@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "homepage",
+            "request": "launch",
+            "mainClass": "nopcommerceTest.homepage",
+            "projectName": "Aug2023SeleniumProject1"
+        },
+        {
+            "url": "file:///C:/Users/rabah/Desktop/New%20folder/index.html"
+        }
+    ]
+}
