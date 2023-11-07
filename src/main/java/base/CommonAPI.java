@@ -1,48 +1,52 @@
 package base;
 
 import com.relevantcodes.extentreports.LogStatus;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.ITestContext;
 import org.testng.ITestResult;
 import org.testng.annotations.*;
+import org.testng.annotations.Optional;
 import reporting.ExtentManager;
 import reporting.ExtentTestManager;
 import utility.Utility;
-
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 
 public class CommonAPI {
     Logger LOG = LogManager.getLogger(CommonAPI.class.getName());
-    public Properties prop = Utility.loadProp();
+
+    String takeScreenshot = Utility.getProperties().getProperty("take.screenshot", "false");
+    String maximizeBrowser = Utility.getProperties().getProperty("browser.maximize", "true");
+    String implicitWait = Utility.getProperties().getProperty("implicit.wait", "10");
+    String username = Utility.decode(Utility.getProperties().getProperty("browserstack.username").trim());
+    String password = Utility.decode(Utility.getProperties().getProperty("browserstack.password").trim());
+    String headlessMode = Utility.getProperties().getProperty("headless.mode", "false");
+
     public WebDriver driver;
-    int implicitWait = Integer.parseInt(prop.getProperty("wait.time", "10"));
-    String windowMaximize = prop.getProperty("window.maximize", "true");
-    String username = prop.getProperty("browserstack.username");
-    String password = prop.getProperty("browserstack.key");
 
-    //String takeScreenshot = Utility.getProperties().getProperty("take.screenshot", "false");
-    //String headlessMode = Utility.getProperties().getProperty("headless.mode", "false");
-
-    //report setup from line 48 to 105
+    //report setup from line 37 to 94
     public static com.relevantcodes.extentreports.ExtentReports extent;
 
     @BeforeSuite
@@ -83,143 +87,78 @@ public class CommonAPI {
         }
         ExtentTestManager.endTest();
         extent.flush();
-//        if (takeScreenshot.equalsIgnoreCase("true")){
-//            if (result.getStatus() == ITestResult.FAILURE) {
-//                takeScreenshot(result.getName());
-//            }
-//        }
+        if (takeScreenshot.equalsIgnoreCase("true")){
+            if (result.getStatus() == ITestResult.FAILURE) {
+                takeScreenshot(result.getName());
+            }
+        }
         driver.quit();
     }
     @AfterSuite
     public void generateReport() {
         extent.close();
     }
-
     private Date getTime(long millis) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(millis);
         return calendar.getTime();
     }
-
-    public void getCloudDriver(String envName, String os, String osVersion, String browserName, String browserVersion) throws MalformedURLException {
+    public void getLocalDriver(String browserName){
+        ChromeOptions options = new ChromeOptions();
+        if (browserName.equalsIgnoreCase("chrome")){
+            driver = new ChromeDriver(options.setHeadless(Boolean.parseBoolean(headlessMode)));
+        }else if (browserName.equalsIgnoreCase("firefox")) {
+            driver = new FirefoxDriver();
+        } else if (browserName.equalsIgnoreCase("edge")) {
+            driver = new EdgeDriver();
+        }
+    }
+    public void getCloudDriver(String envName, String os, String osVersion, String browser,
+                               String browserVersion, String username, String password) throws MalformedURLException {
         DesiredCapabilities cap = new DesiredCapabilities();
         cap.setCapability("os", os);
         cap.setCapability("os_version", osVersion);
-        cap.setCapability("browser", browserName);
+        cap.setCapability("browser", browser);
+        cap.setCapability("browser_version", browserVersion);
         if (envName.equalsIgnoreCase("browserstack")){
-            cap.setCapability("browser_version", browserVersion);
-            driver = new RemoteWebDriver(new URL("http://"+username+":"+password+"@hub-cloud.browserstack.com:80/wd/hub"), cap);
-        }else if (envName.equalsIgnoreCase("saucelabs")){
-            driver = new RemoteWebDriver(new URL("http://"+username+":"+password+"@ondemand.saucelabs.com:80/wd/hub"), cap);
+            cap.setCapability("resolution", "1024x768");
+            driver = new RemoteWebDriver(new URL("http://"+username+":"+password+
+                    "@hub-cloud.browserstack.com:80/wd/hub"),cap);
+        } else if (envName.equalsIgnoreCase("saucelabs")) {
+            driver = new RemoteWebDriver(new URL("http://"+username+":"+password+
+                    "@ondemand.saucelabs.com:80/wd.hub"),cap);
         }
-    }
-    public void getLocalDriver(String browserName){
-        if (browserName.equalsIgnoreCase("chrome")){
-            //launch the browser
-            driver = new ChromeDriver();
-            LOG.info("chrome browser launched");
-        }else if (browserName.equalsIgnoreCase("firefox")){
-            //launch the browser
-            driver = new FirefoxDriver();
-            LOG.info("firefox browser launched");
-            System.out.println();
-        }else if (browserName.equalsIgnoreCase("edge")){
-            //launch the browser
-            driver = new EdgeDriver();
-            LOG.info("edge browser launched");
-        }
-    }
 
+    }
     @Parameters({"useCloudEnv","envName","os","osVersion","browserName","browserVersion","url"})
     @BeforeMethod
-    public  void setUp(@Optional("false") boolean useCloudEnv, @Optional("browserstack") String envName, @Optional("windows") String os,
-                       @Optional("10") String osVersion, @Optional("chrome") String browserName, @Optional("110") String browserVersion,
-                       @Optional("https://www.google.com") String url) throws MalformedURLException
-    {
+    public void setUp(@Optional("false") boolean useCloudEnv, @Optional("browserstack") String envName,
+                      @Optional("windows") String os, @Optional("11") String osVersion,
+                      @Optional("chrome") String browserName, @Optional("108") String browserVersion,
+                      @Optional("https://demo.nopcommerce.com/") String url) throws InterruptedException, MalformedURLException {
         if (useCloudEnv){
-            getCloudDriver(os, osVersion, browserName, browserVersion, envName);
+            getCloudDriver(envName, os,osVersion,browserName,browserVersion, username, password);
         }else {
             getLocalDriver(browserName);
         }
-        //Maximize window
-        if(windowMaximize.equalsIgnoreCase("true")){
-            driver.manage().window().maximize();
-            LOG.info("window maximize");
+        if (maximizeBrowser.equalsIgnoreCase("true")){
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(Integer.parseInt(implicitWait)));
         }
-
-        //set the implicit wait
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
-        LOG.info("implicit wait set to " + implicitWait);
-
-        // Navigate to the website
+        driver.manage().window().maximize();
         driver.get(url);
-        LOG.info("navigate to "+url+" ...");
     }
-    //------------------------------------------------------------------------------------------------------------------
-    //reusable methods (non page object model methods)
-    //------------------------------------------------------------------------------------------------------------------
-
+    //    @AfterMethod
+//    public void tearDown(){
+//        driver.close();
+//    }
+    //generic methods
     public WebDriver getDriver() {
         return driver;
     }
-
     public String getCurrentTitle(){
         return driver.getTitle();
     }
-    public String getElementTextNPOM(String cssOrXpath){
-        try {
-            return driver.findElement(By.cssSelector(cssOrXpath)).getText();
-        }catch (Exception e){
-            return driver.findElement(By.xpath(cssOrXpath)).getText();
-        }
-    }
-    public void clickOnNPOM(String cssOrXpath){
-        try {
-            driver.findElement(By.cssSelector(cssOrXpath)).click();
-        }catch (Exception e){
-            driver.findElement(By.xpath(cssOrXpath)).click();
-        }
-    }
-    public void typeNPOM(String cssOrXpath, String text){
-        try {
-            driver.findElement(By.cssSelector(cssOrXpath)).sendKeys(text);
-        }catch (Exception e){
-            driver.findElement(By.xpath(cssOrXpath)).sendKeys(text);
-        }
-    }
-    public void hoverOverNPOM(String cssOrXpath){
-        Actions actions = new Actions(driver);
-        try {
-            WebElement element = driver.findElement(By.cssSelector(cssOrXpath));
-            actions.moveToElement(element).build().perform();
-        }catch (Exception e){
-            WebElement element = driver.findElement(By.xpath(cssOrXpath));
-            actions.moveToElement(element).build().perform();
-        }
-    }
-    public void selectDropdownOptionNPOM(String cssOrXpath, String option){
-        try {
-            WebElement dropdown = driver.findElement(By.cssSelector(cssOrXpath));
-            Select select = new Select(dropdown);
-            try {
-                select.selectByValue(option);
-            }catch (Exception e){
-                select.selectByVisibleText(option);
-            }
-        }catch (Exception e){
-            WebElement dropdown = driver.findElement(By.xpath(cssOrXpath));
-            Select select = new Select(dropdown);
-            try {
-                select.selectByValue(option);
-            }catch (Exception ex){
-                select.selectByVisibleText(option);
-            }
-        }
-    }
-    //------------------------------------------------------------------------------------------------------------------
-    //reusable methods (page object model methods)
-    //------------------------------------------------------------------------------------------------------------------
-    public String getElementText(WebElement element){
+    public String getTextFromElement(WebElement element){
         return element.getText();
     }
     public void clickOn(WebElement element){
@@ -228,16 +167,113 @@ public class CommonAPI {
     public void type(WebElement element, String text){
         element.sendKeys(text);
     }
-    public void hoverOver(WebElement element){
-        Actions actions = new Actions(driver);
-            actions.moveToElement(element).build().perform();
+    public void typeAndEnter(WebElement element, String text){
+        element.sendKeys(text, Keys.ENTER);
     }
-    public void selectDropdownOption(WebElement element, String option){
-        Select select = new Select(element);
+    public void selectOptionFromDropdown(WebElement dropdown, String option){
+        Select select = new Select(dropdown);
         try {
-            select.selectByValue(option);
+            select.selectByVisibleText(option);
         }catch (Exception e){
             select.selectByValue(option);
         }
     }
+    public void hoverOver(WebDriver driver, WebElement element){
+        Actions actions = new Actions(driver);
+        actions.moveToElement(element).build().perform();
+    }
+    public void waitForElementToBeVisible(WebDriver driver, int duration, WebElement element){
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(duration));
+        wait.until(ExpectedConditions.visibilityOf(element));
+
+    }
+    public WebElement waitForElementToBeVisible(By locator, int timeOut, long intervalTime) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(timeOut), Duration.ofMillis(intervalTime));
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
+    public void clickWithActions(WebDriver driver, WebElement element){
+        Actions actions = new Actions(driver);
+        actions.moveToElement(element).click().build().perform();
+    }
+    public void clickWithJavascript(WebElement element){
+        JavascriptExecutor js = (JavascriptExecutor)driver;
+        js.executeScript("arguments[0].click();", element);
+    }
+    public void captureScreenshot() {
+        File file = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+        try {
+            FileUtils.copyFile(file,new File("screenshots"+File.separator+"screenshot.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void takeScreenshot(String screenshotName){
+        DateFormat df = new SimpleDateFormat("MMddyyyyHHmma");
+        Date date = new Date();
+        df.format(date);
+
+        File file = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+        try {
+            FileUtils.copyFile(file, new File(Utility.path + File.separator +"screenshots"+ File.separator + screenshotName+" "+df.format(date)+".jpeg"));
+            LOG.info("Screenshot captured");
+        } catch (Exception e) {
+            LOG.info("Exception while taking screenshot "+e.getMessage());
+        }
+    }
+    //Added Methods
+    public String getCurrentURL(){
+        return driver.getCurrentUrl();
+    }
+    public String getAttributeValue (WebElement element, String attributeName){
+        return element.getAttribute(attributeName);
+    }
+    public boolean elementIsDisplayed (WebElement element){
+        return element.isDisplayed();
+    }
+    public boolean elementIsSelected (WebElement element){
+        return element.isSelected();
+    }
+    public boolean elementIsEnabled (WebElement element){
+        return element.isEnabled();
+    }
+    public void acceptAlert(){
+        driver.switchTo().alert().accept();
+        LOG.info("clicked on accept alert success");
+    }
+    public void dismissAlert(){
+        driver.switchTo().alert().dismiss();
+    }
+    public String getTextFromAlert(){
+        return driver.switchTo().alert().getText();
+    }
+    public void clearTextFromTextBox (WebElement element){
+        element.clear();
+    }
+    public void typeNumber(WebElement element, int number){
+        element.sendKeys(""+number+"");
+    }
+    public void navigateBack (){
+        driver.navigate().back();
+    }
+    public void navigateForward(){
+        driver.navigate().forward();
+    }
+    public int extractNumberBetweenBrackets (String quantity){
+        String quantityNumber = quantity.substring(quantity.indexOf('(')+1,quantity.indexOf(')'));
+        int number = Integer.parseInt(quantityNumber);
+        return number;
+    }
+    public void switchToChildWindow(WebDriver driver, String Title){
+        Set<String> allWindowHandles = driver.getWindowHandles();
+        List<String> hList = new ArrayList<String>(allWindowHandles);
+        for(String window : hList){
+            String url = driver.switchTo().window(window).getCurrentUrl();
+            String windowHandle=driver.switchTo().window(window).getWindowHandle();
+            if(url.contains(Title)){
+                driver.switchTo().window(windowHandle);
+                break;
+            }
+        }
+    }
+
 }
