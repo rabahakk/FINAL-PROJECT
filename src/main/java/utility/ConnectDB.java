@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class ConnectDB {
 
-    Properties prop = Utility.loadProp();
+    Properties prop = Utility.getProperties();
     public static Connection connect = null;
     public static Statement statement = null;
     public static PreparedStatement ps = null;
